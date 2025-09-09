@@ -115,7 +115,33 @@ public class MyHttpClient implements HttpClient{
     }
 
     public String delete(String url, Map<String, String> headers, Map<String, String> data) {
-        return null;
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            URL deleteURL = new URL(url);
+            HttpURLConnection deleteConnection = (HttpURLConnection) deleteURL.openConnection();
+            deleteConnection.setRequestMethod("DELETE");
+            deleteConnection.setDoOutput(true);
+
+            for (String key: headers.keySet()) {
+                deleteConnection.setRequestProperty(key, headers.get(key));
+            }
+
+            String jsonInput = objectMapper.writeValueAsString(data);
+
+            try (OutputStream outputStream = deleteConnection.getOutputStream()) {
+                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
+                outputStream.write(input, 0, input.length);
+            }
+
+            String resultString = readResponse(deleteConnection);
+            deleteConnection.disconnect();
+            return resultString;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static String readResponse(HttpURLConnection connection) {
