@@ -85,7 +85,33 @@ public class MyHttpClient implements HttpClient{
     }
 
     public String put(String url, Map<String, String> headers, Map<String, String> data) {
-        return null;
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            URL putURL = new URL(url);
+            HttpURLConnection putConnection = (HttpURLConnection) putURL.openConnection();
+            putConnection.setRequestMethod("PUT");
+            putConnection.setDoOutput(true);
+
+            for (String key: headers.keySet()) {
+                putConnection.setRequestProperty(key, headers.get(key));
+            }
+
+            String jsonInput = objectMapper.writeValueAsString(data);
+
+            try (OutputStream outputStream = putConnection.getOutputStream()) {
+                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
+                outputStream.write(input, 0, input.length);
+            }
+
+            String resultString = readResponse(putConnection);
+            putConnection.disconnect();
+            return resultString;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public String delete(String url, Map<String, String> headers, Map<String, String> data) {
