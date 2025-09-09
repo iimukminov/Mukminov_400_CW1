@@ -1,34 +1,38 @@
 package ru.kpfu.itis.mukminov.http;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class MyHttpClient implements HttpClient{
     public String get(String url, Map<String, String> headers, Map<String, String> params) {
         if (params != null) {
-            StringBuilder urlParams = new StringBuilder(url + "?");
+            StringBuilder urlParams = new StringBuilder();
 
             for (String key: params.keySet()) {
+
+                if (!urlParams.isEmpty()) {
+                    urlParams.append("&");
+                }
                 try {
-                    urlParams.append(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(params.get(key), "UTF-8") + "&");
+                    urlParams.append(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(params.get(key), "UTF-8"));
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException(e);
                 }
             }
-            url = urlParams.toString().substring(0, urlParams.length() - 1);
+            url = url + "?" + urlParams.toString();
         }
 
         String resultString;
         try {
-            URL url1 = new URL(url);
-            HttpURLConnection connection = (HttpURLConnection) url1.openConnection();
+            URL getURL = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) getURL.openConnection();
             connection.setRequestMethod("GET");
             for (String key: headers.keySet()) {
                 connection.setRequestProperty(key, headers.get(key));
@@ -49,7 +53,35 @@ public class MyHttpClient implements HttpClient{
     }
 
     public String post(String url, Map<String, String> headers, Map<String, String> data) {
-        return null;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            URL postURL = new URL(url);
+            HttpURLConnection postConnection = (HttpURLConnection) postURL.openConnection();
+            postConnection.setRequestMethod("POST");
+            postConnection.setDoOutput(true);
+
+            for (String key: headers.keySet()) {
+                postConnection.setRequestProperty(key, headers.get(key));
+            }
+
+            String jsonInput = objectMapper.writeValueAsString(data);
+
+            try (OutputStream outputStream = postConnection.getOutputStream()) {
+                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
+                outputStream.write(input, 0, input.length);
+            }
+
+            String resultString = readResponse(postConnection);
+            postConnection.disconnect();
+            return resultString;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public String put(String url, Map<String, String> headers, Map<String, String> data) {
