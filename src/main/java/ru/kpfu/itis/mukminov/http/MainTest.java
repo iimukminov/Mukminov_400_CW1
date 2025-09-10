@@ -8,8 +8,8 @@ public class MainTest {
     public static void main(String[] args) {
         String urlGet = "https://jsonplaceholder.typicode.com/posts";
         String urlPost = "https://gorest.co.in/public/v2/users";
-        String urlPut = "https://gorest.co.in/public/v2/users/8111029";
-        String urlDelete = "https://gorest.co.in/public/v2/users/8111029";
+        String urlPut = "https://gorest.co.in/public/v2/users/8111564";
+        String urlDelete = "https://gorest.co.in/public/v2/users/8111563";
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
@@ -22,7 +22,7 @@ public class MainTest {
 
         Map<String, String> dataPost = new HashMap<>();
         dataPost.put("name", "Ilya");
-        dataPost.put("email", "ilyha.06@example.com");
+        dataPost.put("email", "ilyha.mu06@example.com");
         dataPost.put("gender", "male");
         dataPost.put("status", "active");
 

@@ -12,22 +12,7 @@ import java.util.Map;
 
 public class MyHttpClient implements HttpClient{
     public String get(String url, Map<String, String> headers, Map<String, String> params) {
-        if (params != null) {
-            StringBuilder urlParams = new StringBuilder();
-
-            for (String key: params.keySet()) {
-
-                if (!urlParams.isEmpty()) {
-                    urlParams.append("&");
-                }
-                try {
-                    urlParams.append(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(params.get(key), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            url = url + "?" + urlParams.toString();
-        }
+        url = createUrlWithParams(url, params);
 
         String resultString;
         try {
@@ -53,95 +38,15 @@ public class MyHttpClient implements HttpClient{
     }
 
     public String post(String url, Map<String, String> headers, Map<String, String> data) {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        try {
-            URL postURL = new URL(url);
-            HttpURLConnection postConnection = (HttpURLConnection) postURL.openConnection();
-            postConnection.setRequestMethod("POST");
-            postConnection.setDoOutput(true);
-
-            for (String key: headers.keySet()) {
-                postConnection.setRequestProperty(key, headers.get(key));
-            }
-
-            String jsonInput = objectMapper.writeValueAsString(data);
-
-            try (OutputStream outputStream = postConnection.getOutputStream()) {
-                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
-                outputStream.write(input, 0, input.length);
-            }
-
-            String resultString = readResponse(postConnection);
-            postConnection.disconnect();
-            return resultString;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        return doFunction(url, headers, data, "POST");
     }
 
     public String put(String url, Map<String, String> headers, Map<String, String> data) {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        try {
-            URL putURL = new URL(url);
-            HttpURLConnection putConnection = (HttpURLConnection) putURL.openConnection();
-            putConnection.setRequestMethod("PUT");
-            putConnection.setDoOutput(true);
-
-            for (String key: headers.keySet()) {
-                putConnection.setRequestProperty(key, headers.get(key));
-            }
-
-            String jsonInput = objectMapper.writeValueAsString(data);
-
-            try (OutputStream outputStream = putConnection.getOutputStream()) {
-                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
-                outputStream.write(input, 0, input.length);
-            }
-
-            String resultString = readResponse(putConnection);
-            putConnection.disconnect();
-            return resultString;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return doFunction(url, headers, data, "PUT");
     }
 
     public String delete(String url, Map<String, String> headers, Map<String, String> data) {
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        try {
-            URL deleteURL = new URL(url);
-            HttpURLConnection deleteConnection = (HttpURLConnection) deleteURL.openConnection();
-            deleteConnection.setRequestMethod("DELETE");
-            deleteConnection.setDoOutput(true);
-
-            for (String key: headers.keySet()) {
-                deleteConnection.setRequestProperty(key, headers.get(key));
-            }
-
-            String jsonInput = objectMapper.writeValueAsString(data);
-
-            try (OutputStream outputStream = deleteConnection.getOutputStream()) {
-                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
-                outputStream.write(input, 0, input.length);
-            }
-
-            String resultString = readResponse(deleteConnection);
-            deleteConnection.disconnect();
-            return resultString;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return doFunction(url, headers, data, "DELETE");
     }
 
     private static String readResponse(HttpURLConnection connection) {
@@ -161,4 +66,54 @@ public class MyHttpClient implements HttpClient{
         }
     }
 
+    private static String doFunction(String url, Map<String, String> headers, Map<String, String> data, String function) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            URL functionURL = new URL(url);
+            HttpURLConnection functionConnection = (HttpURLConnection) functionURL.openConnection();
+            functionConnection.setRequestMethod(function);
+            functionConnection.setDoOutput(true);
+
+            for (String key: headers.keySet()) {
+                functionConnection.setRequestProperty(key, headers.get(key));
+            }
+
+            String jsonInput = objectMapper.writeValueAsString(data);
+
+            try (OutputStream outputStream = functionConnection.getOutputStream()) {
+                byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
+                outputStream.write(input, 0, input.length);
+            }
+
+            String resultString = readResponse(functionConnection);
+            functionConnection.disconnect();
+            return resultString;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String createUrlWithParams(String url, Map<String, String> params) {
+        if (params != null) {
+            StringBuilder urlParams = new StringBuilder();
+
+            for (String key: params.keySet()) {
+
+                if (!urlParams.isEmpty()) {
+                    urlParams.append("&");
+                }
+                try {
+                    urlParams.append(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(params.get(key), "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            url = url + "?" + urlParams;
+        }
+
+        return url;
+    }
 }
